@@ -1,0 +1,24 @@
+server {
+	listen 80;
+
+	server_name localhost;
+
+	root /gluster/NAMESPACE/www;
+	index index.html index.php;
+
+	location / {
+		try_files $uri $uri/ /index.php?$query_string;
+	}
+
+	location ~ \.php/ { ## Forward paths like /js/index.php/x.js to relevant handler
+		rewrite ^(.*\.php)/ $1 last;
+	}
+
+	location ~ \.php$ { ## Execute PHP scripts
+		if (!-e $request_filename) { rewrite / /index.php last; } ## Catch 404s that try_files miss
+		fastcgi_pass   127.0.0.1:9000;
+		#fastcgi_param  HTTPS $fastcgi_https;
+		fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+		include        fastcgi_params; ## See /etc/nginx/fastcgi_params
+	}
+}
